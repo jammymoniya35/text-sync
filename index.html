@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>Firebase跨网络纯文字同步</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 1rem;
+      background-color: #f0f2f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    textarea {
+      width: 90vw;
+      max-width: 600px;
+      height: 300px;
+      font-size: 1.1rem;
+      padding: 0.6rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      resize: vertical;
+    }
+  </style>
+</head>
+<body>
+  <h2>多设备跨网络纯文字同步</h2>
+  <textarea id="text" placeholder="请输入文字，自动同步到其他设备"></textarea>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+  <script>
+    // 替换这里为你自己的 Firebase 配置信息
+    const firebaseConfig = {
+      apiKey: "你的apiKey",
+      authDomain: "你的authDomain",
+      databaseURL: "你的databaseURL",
+      projectId: "你的projectId",
+      storageBucket: "你的storageBucket",
+      messagingSenderId: "你的messagingSenderId",
+      appId: "你的appId"
+    };
+
+    // 初始化 Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    const textarea = document.getElementById("text");
+    const textRef = database.ref("shared_text");
+
+    // 监听数据库内容变化，更新 textarea
+    textRef.on("value", snapshot => {
+      const val = snapshot.val() || "";
+      if (textarea.value !== val) {
+        textarea.value = val;
+      }
+    });
+
+    // textarea 输入事件，同步内容到数据库
+    textarea.addEventListener("input", () => {
+      textRef.set(textarea.value);
+    });
+  </script>
+</body>
+</html>
