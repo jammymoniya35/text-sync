@@ -32,6 +32,37 @@
       min-height: 1.2em;
       color: red;
     }
+    #connectionButtons {
+      display: none;
+      width: 90vw;
+      max-width: 600px;
+      margin-top: 1rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    #connectionButtons button {
+      flex: 1;
+      font-weight: bold;
+      cursor: pointer;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.6rem 0;
+      transition: background-color 0.3s ease;
+    }
+    #btnOffline {
+      background-color: #d9534f; /* 偏红 */
+    }
+    #btnOffline:hover {
+      background-color: #c9302c;
+    }
+    #btnOnline {
+      background-color: #5cb85c; /* 偏绿 */
+    }
+    #btnOnline:hover {
+      background-color: #449d44;
+    }
   </style>
 </head>
 <body>
@@ -43,6 +74,11 @@
   <p id="msg"></p>
 
   <textarea id="text" placeholder="请输入文字，自动同步到其他设备"></textarea>
+
+  <div id="connectionButtons">
+    <button id="btnOffline">断开连接</button>
+    <button id="btnOnline">重新连接</button>
+  </div>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -68,6 +104,9 @@
     const checkBtn = document.getElementById('checkBtn');
     const msg = document.getElementById('msg');
     const textarea = document.getElementById('text');
+    const connectionButtons = document.getElementById('connectionButtons');
+    const btnOffline = document.getElementById('btnOffline');
+    const btnOnline = document.getElementById('btnOnline');
 
     let syncing = false;
 
@@ -101,10 +140,11 @@
       if (syncing) return;
       syncing = true;
 
-      // 显示文本框，隐藏验证码输入区域
+      // 显示文本框和断开/连接按钮，隐藏验证码输入区域
       textarea.style.display = 'block';
       codeInput.style.display = 'none';
       checkBtn.style.display = 'none';
+      connectionButtons.style.display = 'flex';
       msg.textContent = "";
 
       const textRef = database.ref("shared_text");
@@ -120,6 +160,16 @@
         textRef.set(textarea.value);
       });
     }
+
+    btnOffline.onclick = () => {
+      firebase.database().goOffline();
+      alert("已断开连接");
+    };
+
+    btnOnline.onclick = () => {
+      firebase.database().goOnline();
+      alert("已重新连接");
+    };
   </script>
 
 </body>
