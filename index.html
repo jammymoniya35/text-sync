@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>Firebase跨网络纯文字同步</title>
+  <title>Firebase跨网络纯文字同步（带验证码验证）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
@@ -13,20 +13,35 @@
       flex-direction: column;
       align-items: center;
     }
-    textarea {
+    input, button, textarea {
       width: 90vw;
       max-width: 600px;
-      height: 300px;
       font-size: 1.1rem;
       padding: 0.6rem;
+      margin: 0.5rem 0;
       border-radius: 6px;
       border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    textarea {
+      height: 300px;
       resize: vertical;
+      display: none;
+    }
+    #msg {
+      min-height: 1.2em;
+      color: red;
     }
   </style>
 </head>
 <body>
-  <h2>多设备跨网络纯文字同步</h2>
+
+  <h2>00-多设备跨网络纯文字同步小程序</h2>
+
+  <input type="text" id="codeInput" placeholder="请输入验证码" />
+  <button id="checkBtn">验证</button>
+  <p id="msg"></p>
+
   <textarea id="text" placeholder="请输入文字，自动同步到其他设备"></textarea>
 
   <!-- Firebase SDK -->
@@ -49,21 +64,63 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    const textarea = document.getElementById("text");
-    const textRef = database.ref("shared_text");
+    const codeInput = document.getElementById('codeInput');
+    const checkBtn = document.getElementById('checkBtn');
+    const msg = document.getElementById('msg');
+    const textarea = document.getElementById('text');
 
-    // 监听数据库内容变化，更新 textarea
-    textRef.on("value", snapshot => {
-      const val = snapshot.val() || "";
-      if (textarea.value !== val) {
-        textarea.value = val;
+    let syncing = false;
+
+    checkBtn.onclick = () => {
+      const code = codeInput.value.trim();
+      if (!code) {
+        msg.style.color = "red";
+        msg.textContent = "请输入验证码";
+        return;
       }
-    });
+      msg.style.color = "black";
+      msg.textContent = "验证中...";
 
-    // textarea 输入事件，同步内容到数据库
-    textarea.addEventListener("input", () => {
-      textRef.set(textarea.value);
-    });
+      const codeRef = database.ref('valid_codes/' + code);
+      codeRef.get().then(snapshot => {
+        if (snapshot.exists() && snapshot.val() === true) {
+          msg.style.color = "green";
+          msg.textContent = "验证成功，开始同步文字";
+          startSync();
+        } else {
+          msg.style.color = "red";
+          msg.textContent = "验证码无效，请重试";
+        }
+      }).catch(error => {
+        msg.style.color = "red";
+        msg.textContent = "验证出错: " + error.message;
+      });
+    };
+
+    function startSync() {
+      if (syncing) return;
+      syncing = true;
+
+      // 显示文本框，隐藏验证码输入区域
+      textarea.style.display = 'block';
+      codeInput.style.display = 'none';
+      checkBtn.style.display = 'none';
+      msg.textContent = "";
+
+      const textRef = database.ref("shared_text");
+
+      textRef.on("value", snapshot => {
+        const val = snapshot.val() || "";
+        if (textarea.value !== val) {
+          textarea.value = val;
+        }
+      });
+
+      textarea.addEventListener("input", () => {
+        textRef.set(textarea.value);
+      });
+    }
   </script>
+
 </body>
 </html>
