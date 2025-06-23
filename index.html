@@ -128,11 +128,15 @@
           startSync();
         } else {
           msg.style.color = "red";
-          msg.textContent = "验证码无效，请重试";
+          msg.textContent = "验证码无效，断开连接";
+          // 断开连接
+          firebase.database().goOffline();
         }
       }).catch(error => {
         msg.style.color = "red";
-        msg.textContent = "验证出错: " + error.message;
+        msg.textContent = "验证出错: " + error.message + "，断开连接";
+        // 断开连接
+        firebase.database().goOffline();
       });
     };
 
