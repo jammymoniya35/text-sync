@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>Lin_跨网络纯文字同步</title>
+  <title>Lin_跨网络纯文字+图片同步</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
@@ -63,17 +63,26 @@
     #btnOnline:hover {
       background-color: #449d44;
     }
+    #image {
+      max-width: 90vw;
+      max-height: 300px;
+      display: none;
+      margin-top: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
 
-  <h2>00-多设备跨网络同步-纯文字</h2>
+  <h2>00-多设备跨网络同步-纯文字+图片</h2>
 
   <input type="text" id="codeInput" placeholder="请输入验证码" />
   <button id="checkBtn">验证</button>
   <p id="msg"></p>
 
   <textarea id="text" placeholder="请输入文字，自动同步到其他设备"></textarea>
+  <img id="image" alt="同步的图片" />
 
   <div id="connectionButtons">
     <button id="btnOffline">断开连接</button>
@@ -104,6 +113,7 @@
     const checkBtn = document.getElementById('checkBtn');
     const msg = document.getElementById('msg');
     const textarea = document.getElementById('text');
+    const imageElem = document.getElementById('image');
     const connectionButtons = document.getElementById('connectionButtons');
     const btnOffline = document.getElementById('btnOffline');
     const btnOnline = document.getElementById('btnOnline');
@@ -124,18 +134,16 @@
       codeRef.get().then(snapshot => {
         if (snapshot.exists() && snapshot.val() === true) {
           msg.style.color = "green";
-          msg.textContent = "验证成功，开始同步文字";
+          msg.textContent = "验证成功，开始同步文字和图片";
           startSync();
         } else {
           msg.style.color = "red";
           msg.textContent = "验证码无效，断开连接";
-          // 断开连接
           firebase.database().goOffline();
         }
       }).catch(error => {
         msg.style.color = "red";
         msg.textContent = "验证出错: " + error.message + "，断开连接";
-        // 断开连接
         firebase.database().goOffline();
       });
     };
@@ -144,15 +152,18 @@
       if (syncing) return;
       syncing = true;
 
-      // 显示文本框和断开/连接按钮，隐藏验证码输入区域
+      // 显示文本框和图片显示区、连接按钮，隐藏验证码输入区
       textarea.style.display = 'block';
+      imageElem.style.display = 'block';  // 这里先显示，后续根据数据控制是否隐藏
       codeInput.style.display = 'none';
       checkBtn.style.display = 'none';
       connectionButtons.style.display = 'flex';
       msg.textContent = "";
 
       const textRef = database.ref("shared_text");
+      const imageRef = database.ref("shared_image");
 
+      // 监听文字同步
       textRef.on("value", snapshot => {
         const val = snapshot.val() || "";
         if (textarea.value !== val) {
@@ -160,8 +171,41 @@
         }
       });
 
+      // 监听图片同步
+      imageRef.on("value", snapshot => {
+        const base64img = snapshot.val();
+        if (base64img) {
+          imageElem.src = base64img;
+          imageElem.style.display = "block";
+        } else {
+          imageElem.style.display = "none";
+          imageElem.src = "";
+        }
+      });
+
+      // 文字输入同步
       textarea.addEventListener("input", () => {
         textRef.set(textarea.value);
+        // 不清空图片
+      });
+
+      // 监听粘贴事件，只处理图片
+      textarea.addEventListener("paste", (event) => {
+        const items = event.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.type.indexOf("image") !== -1) {
+            const file = item.getAsFile();
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+              const base64img = evt.target.result;
+              imageRef.set(base64img);
+            };
+            reader.readAsDataURL(file);
+            event.preventDefault();  // 阻止粘贴文本插入
+            break;  // 只处理第一张图片
+          }
+        }
       });
     }
 
