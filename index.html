@@ -131,7 +131,6 @@
     textarea {
       height: 200px;
       resize: vertical;
-      display: none;
       font-family: inherit;
       line-height: 1.5;
     }
@@ -151,7 +150,6 @@
       display: flex;
       gap: 15px;
       margin-top: 20px;
-      display: none;
     }
     
     #connectionButtons button {
@@ -216,7 +214,6 @@
     }
     
     .file-section {
-      display: none;
       width: 100%;
       margin-top: 20px;
     }
@@ -390,7 +387,7 @@
       <span id="deleteImageBtn" class="icon-btn" title="删除图片">×</span>
     </div>
     
-    <div class="file-section" id="fileSection">
+    <div class="card" id="fileSection" display: none;>
       <h2 class="section-title">文件同步</h2>
       <label for="fileInput" id="uploadFileLabel">点击上传或拖放文件到此处</label>
       <input type="file" id="fileInput" />
