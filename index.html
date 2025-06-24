@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>Lin_跨网络纯文字+图片同步</title>
+  <title>Lin_跨网络纯文字+图片+文件同步</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
@@ -52,13 +52,13 @@
       transition: background-color 0.3s ease;
     }
     #btnOffline {
-      background-color: #d9534f; /* 偏红 */
+      background-color: #d9534f;
     }
     #btnOffline:hover {
       background-color: #c9302c;
     }
     #btnOnline {
-      background-color: #5cb85c; /* 偏绿 */
+      background-color: #5cb85c;
     }
     #btnOnline:hover {
       background-color: #449d44;
@@ -71,30 +71,51 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
+    .container {
+      position: relative;
+      width: 90vw;
+      max-width: 600px;
+    }
+    .delete-btn {
+      position: absolute;
+      top: 0;
+      right: 0;
+      color: red;
+      font-size: 1.5rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: none;
+    }
   </style>
 </head>
 <body>
-
-  <h2>00-多设备跨网络同步-纯文字+图片</h2>
+  <h2>00-多设备跨网络同步</h2>
 
   <input type="text" id="codeInput" placeholder="请输入验证码" />
   <button id="checkBtn">验证</button>
   <p id="msg"></p>
 
   <textarea id="text" placeholder="请输入文字，自动同步到其他设备"></textarea>
-  <img id="image" alt="同步的图片" />
+
+  <div class="container">
+    <img id="image" alt="同步的图片" />
+    <span id="deleteImageBtn" class="delete-btn" title="删除图片">&times;</span>
+  </div>
 
   <div id="connectionButtons">
     <button id="btnOffline">断开连接</button>
     <button id="btnOnline">重新连接</button>
   </div>
 
-  <!-- Firebase SDK -->
+  <div class="container">
+    <input type="file" id="excelInput" accept=".xlsx" />
+    <button id="downloadExcelBtn">下载上传的 Excel</button>
+    <span id="deleteExcelBtn" class="delete-btn" title="删除 Excel">&times;</span>
+  </div>
+
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-
   <script>
-    // 替换这里为你自己的 Firebase 配置信息
     const firebaseConfig = {
       apiKey: "AIzaSyDkEenPa4ypV7IcGec0BHy-e1y5OV4Gl38",
       authDomain: "text-sync-47ca0.firebaseapp.com",
@@ -105,7 +126,6 @@
       appId: "1:376412844230:web:2b81fca8410ca5cedda7c7"
     };
 
-    // 初始化 Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
@@ -114,24 +134,22 @@
     const msg = document.getElementById('msg');
     const textarea = document.getElementById('text');
     const imageElem = document.getElementById('image');
+    const deleteImageBtn = document.getElementById('deleteImageBtn');
     const connectionButtons = document.getElementById('connectionButtons');
     const btnOffline = document.getElementById('btnOffline');
     const btnOnline = document.getElementById('btnOnline');
+    const excelInput = document.getElementById('excelInput');
+    const downloadExcelBtn = document.getElementById('downloadExcelBtn');
+    const deleteExcelBtn = document.getElementById('deleteExcelBtn');
 
     let syncing = false;
 
     checkBtn.onclick = () => {
       const code = codeInput.value.trim();
-      if (!code) {
-        msg.style.color = "red";
-        msg.textContent = "请输入验证码";
-        return;
-      }
+      if (!code) return msg.textContent = "请输入验证码";
       msg.style.color = "black";
       msg.textContent = "验证中...";
-
-      const codeRef = database.ref('valid_codes/' + code);
-      codeRef.get().then(snapshot => {
+      database.ref('valid_codes/' + code).get().then(snapshot => {
         if (snapshot.exists() && snapshot.val() === true) {
           msg.style.color = "green";
           msg.textContent = "验证成功，开始同步文字和图片";
@@ -143,7 +161,7 @@
         }
       }).catch(error => {
         msg.style.color = "red";
-        msg.textContent = "验证出错: " + error.message + "，断开连接";
+        msg.textContent = "验证出错: " + error.message;
         firebase.database().goOffline();
       });
     };
@@ -151,10 +169,8 @@
     function startSync() {
       if (syncing) return;
       syncing = true;
-
-      // 显示文本框和图片显示区、连接按钮，隐藏验证码输入区
       textarea.style.display = 'block';
-      imageElem.style.display = 'block';  // 这里先显示，后续根据数据控制是否隐藏
+      imageElem.style.display = 'block';
       codeInput.style.display = 'none';
       checkBtn.style.display = 'none';
       connectionButtons.style.display = 'flex';
@@ -162,34 +178,35 @@
 
       const textRef = database.ref("shared_text");
       const imageRef = database.ref("shared_image");
+      const excelRef = database.ref("shared_excel");
 
-      // 监听文字同步
       textRef.on("value", snapshot => {
         const val = snapshot.val() || "";
-        if (textarea.value !== val) {
-          textarea.value = val;
-        }
+        if (textarea.value !== val) textarea.value = val;
       });
 
-      // 监听图片同步
       imageRef.on("value", snapshot => {
         const base64img = snapshot.val();
         if (base64img) {
           imageElem.src = base64img;
           imageElem.style.display = "block";
+          deleteImageBtn.style.display = "inline";
         } else {
           imageElem.style.display = "none";
           imageElem.src = "";
+          deleteImageBtn.style.display = "none";
         }
       });
 
-      // 文字输入同步
-      textarea.addEventListener("input", () => {
-        textRef.set(textarea.value);
-        // 不清空图片
+      excelRef.on("value", snapshot => {
+        const val = snapshot.val();
+        deleteExcelBtn.style.display = val ? 'inline' : 'none';
       });
 
-      // 监听粘贴事件，只处理图片
+      textarea.addEventListener("input", () => {
+        textRef.set(textarea.value);
+      });
+
       textarea.addEventListener("paste", (event) => {
         const items = event.clipboardData.items;
         for (let i = 0; i < items.length; i++) {
@@ -197,15 +214,41 @@
           if (item.type.indexOf("image") !== -1) {
             const file = item.getAsFile();
             const reader = new FileReader();
-            reader.onload = (evt) => {
-              const base64img = evt.target.result;
-              imageRef.set(base64img);
-            };
+            reader.onload = (evt) => imageRef.set(evt.target.result);
             reader.readAsDataURL(file);
-            event.preventDefault();  // 阻止粘贴文本插入
-            break;  // 只处理第一张图片
+            event.preventDefault();
+            break;
           }
         }
+      });
+
+      excelInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => database.ref("shared_excel").set(e.target.result);
+        reader.readAsDataURL(file);
+      });
+
+      downloadExcelBtn.addEventListener('click', () => {
+        database.ref("shared_excel").get().then(snapshot => {
+          const base64 = snapshot.val();
+          if (!base64) return alert("没有上传的 Excel 文件");
+          const a = document.createElement("a");
+          a.href = base64;
+          a.download = "共享Excel.xlsx";
+          a.click();
+        });
+      });
+
+      deleteImageBtn.addEventListener('click', () => {
+        if (!confirm("确定删除图片？")) return;
+        database.ref("shared_image").remove();
+      });
+
+      deleteExcelBtn.addEventListener('click', () => {
+        if (!confirm("确定删除 Excel 文件？")) return;
+        database.ref("shared_excel").remove();
       });
     }
 
@@ -219,6 +262,5 @@
       alert("已重新连接");
     };
   </script>
-
 </body>
 </html>
