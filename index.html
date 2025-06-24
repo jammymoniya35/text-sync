@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>Lin_跨网络纯文字+图片+多文件同步（支持任意文件）</title>
+  <title>Lin_跨网络纯文字+图片+文件同步</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
@@ -26,14 +26,14 @@
     textarea {
       height: 300px;
       resize: vertical;
-      display: none;
+      display: none; /* 初始隐藏 */
     }
     #msg {
       min-height: 1.2em;
       color: red;
     }
     #connectionButtons {
-      display: none;
+      display: none; /* 初始隐藏 */
       width: 90vw;
       max-width: 600px;
       margin-top: 1rem;
@@ -72,70 +72,83 @@
     #image {
       max-width: 100%;
       max-height: 300px;
-      display: none;
+      display: none; /* 初始隐藏 */
       border-radius: 6px;
       border: 1px solid #ccc;
     }
-    /* 右上角按钮组 */
-    #imageButtons {
+    .icon-btn {
+      cursor: pointer;
+      user-select: none;
+      background: rgba(255,255,255,0.8);
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      line-height: 26px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+      color: #555;
+      border: 1px solid #ccc;
+      transition: color 0.3s ease, border-color 0.3s ease;
+    }
+    .icon-btn:hover {
+      color: #000;
+      border-color: #000;
+    }
+    #deleteImageBtn, #downloadImageBtn, #deleteFileBtn, #downloadFileBtn {
       position: absolute;
-      top: 6px;
-      right: 6px;
-      display: flex;
-      gap: 8px;
+      top: 4px;
+      display: none; /* 初始隐藏 */
       z-index: 10;
     }
-    #imageButtons button {
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      padding: 0;
-      width: 24px;
-      height: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: filter 0.2s ease;
+    #deleteImageBtn {
+      right: 4px;
     }
-    #imageButtons button:hover svg {
-      filter: brightness(0.7);
+    #downloadImageBtn {
+      right: 40px;
     }
-    input[type="file"] {
-      width: 100%;
-      box-sizing: border-box;
-      display: block;
-    }
-    #fileDisplay {
-      margin-top: 0.3rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    #fileContainer {
+      margin-top: 1rem;
+      width: 90vw;
+      max-width: 600px;
+      display: none; /* 初始隐藏 */
+      position: relative;
+      padding: 0.6rem;
       border: 1px solid #ccc;
       border-radius: 6px;
-      padding: 0.5rem;
-      background: white;
-      max-width: 600px;
-      word-break: break-all;
+      background-color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
     }
     #fileName {
       flex: 1;
-      font-weight: bold;
-      font-size: 1rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
-    .file-btn {
-      background: transparent;
-      border: none;
+    #fileInput {
+      width: 100%;
+      box-sizing: border-box;
+      display: none; /* 初始隐藏 */
+      margin-top: 0.5rem;
+    }
+    #uploadFileLabel {
+      width: 90vw;
+      max-width: 600px;
+      margin-top: 0.5rem;
+      padding: 0.6rem;
+      border: 1px dashed #aaa;
+      border-radius: 6px;
+      text-align: center;
       cursor: pointer;
-      padding: 0;
-      width: 28px;
-      height: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: filter 0.2s ease;
+      color: #666;
+      user-select: none;
     }
-    .file-btn:hover svg {
-      filter: brightness(0.7);
+    #uploadFileLabel:hover {
+      border-color: #555;
+      color: #000;
     }
   </style>
 </head>
@@ -149,37 +162,19 @@
 
   <textarea id="text" placeholder="请输入文字，自动同步到其他设备"></textarea>
 
-  <div class="container" id="imageContainer">
+  <div class="container" id="imageContainer" style="position:relative;">
     <img id="image" alt="同步的图片" />
-    <div id="imageButtons" style="display:none;">
-      <button id="downloadImageBtn" title="下载图片" aria-label="下载图片">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#337ab7" viewBox="0 0 24 24">
-          <path d="M12 16l4-5h-3V4h-2v7H8l4 5zM6 18v2h12v-2H6z"/>
-        </svg>
-      </button>
-      <button id="deleteImageBtn" title="删除图片" aria-label="删除图片">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="red" viewBox="0 0 24 24">
-          <path d="M18.3 5.71a1 1 0 00-1.42 0L12 10.59 7.11 5.7a1 1 0 10-1.41 1.42L10.59 12l-4.89 4.88a1 1 0 101.41 1.42L12 13.41l4.88 4.89a1 1 0 001.42-1.41L13.41 12l4.89-4.88a1 1 0 000-1.41z"/>
-        </svg>
-      </button>
-    </div>
+    <span id="downloadImageBtn" class="icon-btn" title="下载图片" style="right:40px;">&#8681;</span>
+    <span id="deleteImageBtn" class="icon-btn" title="删除图片">&times;</span>
   </div>
 
-  <div class="container" id="fileContainer">
-    <input type="file" id="fileInput" />
-    <div id="fileDisplay" style="display:none;">
-      <div id="fileName"></div>
-      <button id="downloadFileBtn" class="file-btn" title="下载文件" aria-label="下载文件">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#337ab7" viewBox="0 0 24 24">
-          <path d="M12 16l4-5h-3V4h-2v7H8l4 5zM6 18v2h12v-2H6z"/>
-        </svg>
-      </button>
-      <button id="deleteFileBtn" class="file-btn" title="删除文件" aria-label="删除文件">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="red" viewBox="0 0 24 24">
-          <path d="M18.3 5.71a1 1 0 00-1.42 0L12 10.59 7.11 5.7a1 1 0 10-1.41 1.42L10.59 12l-4.89 4.88a1 1 0 101.41 1.42L12 13.41l4.88 4.89a1 1 0 001.42-1.41L13.41 12l4.89-4.88a1 1 0 000-1.41z"/>
-        </svg>
-      </button>
-    </div>
+  <label for="fileInput" id="uploadFileLabel" style="display:none;">点击上传文件</label>
+  <input type="file" id="fileInput" />
+
+  <div id="fileContainer">
+    <span id="fileName"></span>
+    <span id="downloadFileBtn" class="icon-btn" title="下载文件">&#8681;</span>
+    <span id="deleteFileBtn" class="icon-btn" title="删除文件">&times;</span>
   </div>
 
   <div id="connectionButtons">
@@ -210,15 +205,17 @@
     const codeInput = document.getElementById('codeInput');
     const checkBtn = document.getElementById('checkBtn');
     const msg = document.getElementById('msg');
+
     const textarea = document.getElementById('text');
 
     const imageElem = document.getElementById('image');
-    const imageButtons = document.getElementById('imageButtons');
-    const downloadImageBtn = document.getElementById('downloadImageBtn');
     const deleteImageBtn = document.getElementById('deleteImageBtn');
+    const downloadImageBtn = document.getElementById('downloadImageBtn');
+    const imageContainer = document.getElementById('imageContainer');
 
+    const uploadFileLabel = document.getElementById('uploadFileLabel');
     const fileInput = document.getElementById('fileInput');
-    const fileDisplay = document.getElementById('fileDisplay');
+    const fileContainer = document.getElementById('fileContainer');
     const fileNameElem = document.getElementById('fileName');
     const downloadFileBtn = document.getElementById('downloadFileBtn');
     const deleteFileBtn = document.getElementById('deleteFileBtn');
@@ -230,7 +227,7 @@
     let syncing = false;
     let eventsBound = false;
 
-    // 验证码按钮点击事件
+    // 验证按钮点击
     checkBtn.onclick = () => {
       const code = codeInput.value.trim();
       if (!code) {
@@ -249,19 +246,102 @@
           msg.style.color = "red";
           msg.textContent = "验证码无效，断开连接";
           firebase.database().goOffline();
+          hideSyncControls();
         }
       }).catch(error => {
         msg.style.color = "red";
         msg.textContent = "验证出错: " + error.message;
         firebase.database().goOffline();
+        hideSyncControls();
       });
     };
 
+    // 隐藏所有同步控件函数
+    function hideSyncControls() {
+      textarea.style.display = 'none';
+
+      imageElem.style.display = 'none';
+      deleteImageBtn.style.display = 'none';
+      downloadImageBtn.style.display = 'none';
+
+      uploadFileLabel.style.display = 'none';
+      fileInput.style.display = 'none';
+      fileContainer.style.display = 'none';
+
+      connectionButtons.style.display = 'none';
+
+      codeInput.style.display = 'block';
+      checkBtn.style.display = 'inline-block';
+    }
+
+    // 显示同步控件函数
+    function startSync() {
+      if (syncing) return;
+      syncing = true;
+
+      codeInput.style.display = 'none';
+      checkBtn.style.display = 'none';
+      msg.textContent = '';
+
+      textarea.style.display = 'block';
+
+      imageElem.style.display = 'none'; // 先隐藏，监听时显示
+      deleteImageBtn.style.display = 'none';
+      downloadImageBtn.style.display = 'none';
+
+      uploadFileLabel.style.display = 'block';
+      fileInput.style.display = 'none'; // 文件选择由label触发
+      fileContainer.style.display = 'none';
+
+      connectionButtons.style.display = 'flex';
+
+      const textRef = database.ref("shared_text");
+      const imageRef = database.ref("shared_image");
+      const fileRef = database.ref("shared_file");
+
+      // 监听文字
+      textRef.on("value", snapshot => {
+        const val = snapshot.val() || "";
+        if (textarea.value !== val) textarea.value = val;
+      });
+
+      // 监听图片
+      imageRef.on("value", snapshot => {
+        const base64img = snapshot.val();
+        if (base64img) {
+          imageElem.src = base64img;
+          imageElem.style.display = "block";
+          deleteImageBtn.style.display = "inline-block";
+          downloadImageBtn.style.display = "inline-block";
+        } else {
+          imageElem.style.display = "none";
+          imageElem.src = "";
+          deleteImageBtn.style.display = "none";
+          downloadImageBtn.style.display = "none";
+        }
+      });
+
+      // 监听文件
+      fileRef.on("value", snapshot => {
+        const val = snapshot.val();
+        if (val && val.data && val.name) {
+          fileNameElem.textContent = val.name;
+          fileContainer.style.display = 'flex';
+        } else {
+          fileNameElem.textContent = '';
+          fileContainer.style.display = 'none';
+        }
+      });
+
+      bindEvents(textRef, imageRef, fileRef);
+    }
+
+    // 绑定事件（只绑定一次）
     function bindEvents(textRef, imageRef, fileRef) {
       if (eventsBound) return;
       eventsBound = true;
 
-      // 文字输入同步
+      // 文字同步
       textarea.addEventListener("input", () => {
         textRef.set(textarea.value);
       });
@@ -282,24 +362,46 @@
         }
       });
 
-      // 文件上传 (支持任意文件)
+      // 点击label触发选择文件
+      uploadFileLabel.onclick = () => fileInput.click();
+
+      // 选择文件上传
       fileInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = e => {
-          // 存储格式：{ name: 文件名, data: base64 }
           fileRef.set({
             name: file.name,
             data: e.target.result
           });
-          fileInput.value = ''; // 重置，方便同文件重复上传
+          fileInput.value = '';
         };
         reader.readAsDataURL(file);
       });
 
-      // 下载文件按钮
-      downloadFileBtn.addEventListener('click', () => {
+      // 下载图片
+      downloadImageBtn.onclick = () => {
+        if (!imageElem.src) return alert("当前没有图片可下载");
+        const a = document.createElement("a");
+        a.href = imageElem.src;
+        let ext = "png";
+        const m = imageElem.src.match(/^data:image\/(.*?);base64,/);
+        if (m && m[1]) ext = m[1];
+        a.download = `下载图片.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      };
+
+      // 删除图片
+      deleteImageBtn.onclick = () => {
+        if (!confirm("确定删除图片？")) return;
+        imageRef.remove();
+      };
+
+      // 下载文件
+      downloadFileBtn.onclick = () => {
         fileRef.get().then(snapshot => {
           const val = snapshot.val();
           if (!val || !val.data) return alert("没有上传的文件");
@@ -310,93 +412,26 @@
           a.click();
           a.remove();
         });
-      });
+      };
 
-      // 删除文件按钮
-      deleteFileBtn.addEventListener('click', () => {
+      // 删除文件
+      deleteFileBtn.onclick = () => {
         if (!confirm("确定删除文件？")) return;
         fileRef.remove();
-      });
-    }
-
-    function startSync() {
-      if (syncing) return;
-      syncing = true;
-
-      textarea.style.display = 'block';
-      imageElem.style.display = 'none';
-      imageButtons.style.display = 'none';
-
-      fileInput.style.display = 'block';
-      fileDisplay.style.display = 'none';
-
-      codeInput.style.display = 'none';
-      checkBtn.style.display = 'none';
-      connectionButtons.style.display = 'flex';
-
-      msg.textContent = "";
-
-      const textRef = database.ref("shared_text");
-      const imageRef = database.ref("shared_image");
-      const fileRef = database.ref("shared_file");
-
-      // 监听文字
-      textRef.on("value", snapshot => {
-        const val = snapshot.val() || "";
-        if (textarea.value !== val) textarea.value = val;
-      });
-
-      // 监听图片
-      imageRef.on("value", snapshot => {
-        const base64img = snapshot.val();
-        if (base64img) {
-          imageElem.src = base64img;
-          imageElem.style.display = "block";
-          imageButtons.style.display = "flex";
-        } else {
-          imageElem.style.display = "none";
-          imageElem.src = "";
-          imageButtons.style.display = "none";
-        }
-      });
-
-      // 监听文件
-      fileRef.on("value", snapshot => {
-        const val = snapshot.val();
-        if (val && val.data && val.name) {
-          fileNameElem.textContent = val.name;
-          fileDisplay.style.display = 'flex';
-        } else {
-          fileNameElem.textContent = '';
-          fileDisplay.style.display = 'none';
-        }
-      });
-
-      bindEvents(textRef, imageRef, fileRef);
-
-      // 绑定图片按钮事件
-      downloadImageBtn.onclick = () => {
-        if (!imageElem.src) return alert("当前没有图片可下载");
-        const a = document.createElement("a");
-        a.href = imageElem.src;
-        let extension = imageElem.src.substring("data:image/".length, imageElem.src.indexOf(";base64"));
-        a.download = `下载图片.${extension}`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      };
-
-      deleteImageBtn.onclick = () => {
-        if (!confirm("确定删除图片？")) return;
-        database.ref("shared_image").remove();
       };
     }
 
+    // 初始隐藏同步区，只显示验证码
+    hideSyncControls();
+
+    // 断开连接按钮
     btnOffline.onclick = () => {
       firebase.database().goOffline();
       alert("已断开连接");
+      hideSyncControls();
     };
 
+    // 重新连接按钮
     btnOnline.onclick = () => {
       firebase.database().goOnline();
       alert("已重新连接");
