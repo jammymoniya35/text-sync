@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>Lin_跨网络纯文字+图片+文件同步</title>
+  <title>跨网络多设备同步工具</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * {
@@ -366,7 +366,7 @@
       </ul>
     </div>
     
-    <input type="text" id="codeInput" placeholder="请输入6位验证码" autocomplete="off" maxlength="6" />
+    <input type="text" id="codeInput" placeholder="请输入验证码" autocomplete="off" />
     <button id="checkBtn">验证并连接</button>
     
     <div id="msg"></div>
@@ -495,11 +495,6 @@
         const code = codeInput.value.trim();
         if (!code) {
           showMessage("请输入验证码");
-          return;
-        }
-        
-        if (code.length < 4) {
-          showMessage("验证码至少需要4位");
           return;
         }
         
