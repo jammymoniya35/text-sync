@@ -146,10 +146,16 @@
       color: #666;
       user-select: none;
       display: none;
+      transition: all 0.3s ease;
     }
     #uploadFileLabel:hover {
       border-color: #555;
       color: #000;
+    }
+    #uploadFileLabel.uploading {
+      opacity: 0.7;
+      cursor: not-allowed;
+      border-style: solid;
     }
 
     /* 文件下载和删除按钮 */
@@ -239,7 +245,7 @@
     const imageContainer = document.getElementById('imageContainer');
 
     const uploadFileLabel = document.getElementById('uploadFileLabel');
-    const fileInput = document.getElementById('fileInput');
+    let fileInput = document.getElementById('fileInput');
     const fileContainer = document.getElementById('fileContainer');
     const fileNameElem = document.getElementById('fileName');
     const downloadFileBtn = document.getElementById('downloadFileBtn');
@@ -397,6 +403,58 @@
       );
     }
 
+    // 文件上传处理函数
+    async function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      try {
+        // 显示上传状态
+        uploadFileLabel.textContent = '上传中...';
+        uploadFileLabel.classList.add('uploading');
+        
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        
+        await fileRef.set({
+          name: file.name,
+          data: dataUrl
+        });
+        
+        // 完全重置文件输入
+        resetFileInput();
+      } catch (error) {
+        showMessage("上传文件出错: " + error.message, "red");
+      } finally {
+        // 恢复上传按钮状态
+        uploadFileLabel.textContent = '点击上传文件';
+        uploadFileLabel.classList.remove('uploading');
+      }
+    }
+
+    // 重置文件输入元素
+    function resetFileInput() {
+      // 创建新的input元素替换旧的
+      const newInput = document.createElement('input');
+      newInput.type = 'file';
+      newInput.id = 'fileInput';
+      newInput.style.display = 'none';
+      
+      // 替换DOM元素
+      fileInput.parentNode.replaceChild(newInput, fileInput);
+      fileInput = newInput;
+      
+      // 重新绑定事件
+      fileInput.addEventListener('change', handleFileUpload);
+      
+      // 确保label关联新input
+      uploadFileLabel.htmlFor = 'fileInput';
+    }
+
     // 绑定事件（只绑定一次）
     function bindEvents() {
       if (eventsBound) return;
@@ -435,28 +493,7 @@
       uploadFileLabel.onclick = () => fileInput.click();
 
       // 选择文件上传
-      fileInput.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = e => {
-          fileRef.set({
-            name: file.name,
-            data: e.target.result
-          })
-          .then(() => {
-            fileInput.value = '';
-          })
-          .catch(error => {
-            showMessage("上传文件出错: " + error.message, "red");
-          });
-        };
-        reader.onerror = () => {
-          showMessage("读取文件出错", "red");
-        };
-        reader.readAsDataURL(file);
-      });
+      fileInput.addEventListener('change', handleFileUpload);
 
       // 下载图片
       downloadImageBtn.onclick = downloadImage;
@@ -538,6 +575,3 @@
       database.goOnline();
       alert("已重新连接");
     };
-  </script>
-</body>
-</html>
