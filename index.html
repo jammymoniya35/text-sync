@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>Lin_跨网络纯文字+图片+文件同步</title>
+  <title>Lin_跨网络纯文字+图片+多文件同步（支持任意文件）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
@@ -76,43 +76,66 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
+    /* 右上角按钮组 */
+    #imageButtons {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+    #imageButtons button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: filter 0.2s ease;
+    }
+    #imageButtons button:hover svg {
+      filter: brightness(0.7);
+    }
     input[type="file"] {
       width: 100%;
       box-sizing: border-box;
-      display: none; /* 默认隐藏，验证通过后显示 */
+      display: block;
     }
-    #downloadExcelBtn {
-      display: none; /* 默认隐藏，验证通过后显示 */
+    #fileDisplay {
       margin-top: 0.3rem;
-      width: 100%;
-      background-color: #337ab7;
-      color: white;
-      font-weight: bold;
-      border: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid #ccc;
       border-radius: 6px;
-      padding: 0.6rem 0;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
+      padding: 0.5rem;
+      background: white;
+      max-width: 600px;
+      word-break: break-all;
     }
-    #downloadExcelBtn:hover {
-      background-color: #286090;
-    }
-    .delete-btn {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      color: red;
-      font-size: 1.6rem;
+    #fileName {
+      flex: 1;
       font-weight: bold;
+      font-size: 1rem;
+    }
+    .file-btn {
+      background: transparent;
+      border: none;
       cursor: pointer;
-      display: none;
-      user-select: none;
-      background: rgba(255,255,255,0.8);
-      border-radius: 50%;
+      padding: 0;
       width: 28px;
       height: 28px;
-      line-height: 26px;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: filter 0.2s ease;
+    }
+    .file-btn:hover svg {
+      filter: brightness(0.7);
     }
   </style>
 </head>
@@ -128,13 +151,35 @@
 
   <div class="container" id="imageContainer">
     <img id="image" alt="同步的图片" />
-    <span id="deleteImageBtn" class="delete-btn" title="删除图片">&times;</span>
+    <div id="imageButtons" style="display:none;">
+      <button id="downloadImageBtn" title="下载图片" aria-label="下载图片">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#337ab7" viewBox="0 0 24 24">
+          <path d="M12 16l4-5h-3V4h-2v7H8l4 5zM6 18v2h12v-2H6z"/>
+        </svg>
+      </button>
+      <button id="deleteImageBtn" title="删除图片" aria-label="删除图片">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="red" viewBox="0 0 24 24">
+          <path d="M18.3 5.71a1 1 0 00-1.42 0L12 10.59 7.11 5.7a1 1 0 10-1.41 1.42L10.59 12l-4.89 4.88a1 1 0 101.41 1.42L12 13.41l4.88 4.89a1 1 0 001.42-1.41L13.41 12l4.89-4.88a1 1 0 000-1.41z"/>
+        </svg>
+      </button>
+    </div>
   </div>
 
-  <div class="container" id="excelContainer">
-    <input type="file" id="excelInput" accept=".xlsx" />
-    <button id="downloadExcelBtn">下载上传的 Excel</button>
-    <span id="deleteExcelBtn" class="delete-btn" title="删除 Excel 文件">&times;</span>
+  <div class="container" id="fileContainer">
+    <input type="file" id="fileInput" />
+    <div id="fileDisplay" style="display:none;">
+      <div id="fileName"></div>
+      <button id="downloadFileBtn" class="file-btn" title="下载文件" aria-label="下载文件">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#337ab7" viewBox="0 0 24 24">
+          <path d="M12 16l4-5h-3V4h-2v7H8l4 5zM6 18v2h12v-2H6z"/>
+        </svg>
+      </button>
+      <button id="deleteFileBtn" class="file-btn" title="删除文件" aria-label="删除文件">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="red" viewBox="0 0 24 24">
+          <path d="M18.3 5.71a1 1 0 00-1.42 0L12 10.59 7.11 5.7a1 1 0 10-1.41 1.42L10.59 12l-4.89 4.88a1 1 0 101.41 1.42L12 13.41l4.88 4.89a1 1 0 001.42-1.41L13.41 12l4.89-4.88a1 1 0 000-1.41z"/>
+        </svg>
+      </button>
+    </div>
   </div>
 
   <div id="connectionButtons">
@@ -166,18 +211,22 @@
     const checkBtn = document.getElementById('checkBtn');
     const msg = document.getElementById('msg');
     const textarea = document.getElementById('text');
+
     const imageElem = document.getElementById('image');
+    const imageButtons = document.getElementById('imageButtons');
+    const downloadImageBtn = document.getElementById('downloadImageBtn');
     const deleteImageBtn = document.getElementById('deleteImageBtn');
-    const excelInput = document.getElementById('excelInput');
-    const downloadExcelBtn = document.getElementById('downloadExcelBtn');
-    const deleteExcelBtn = document.getElementById('deleteExcelBtn');
+
+    const fileInput = document.getElementById('fileInput');
+    const fileDisplay = document.getElementById('fileDisplay');
+    const fileNameElem = document.getElementById('fileName');
+    const downloadFileBtn = document.getElementById('downloadFileBtn');
+    const deleteFileBtn = document.getElementById('deleteFileBtn');
+
     const connectionButtons = document.getElementById('connectionButtons');
     const btnOffline = document.getElementById('btnOffline');
     const btnOnline = document.getElementById('btnOnline');
-    const imageContainer = document.getElementById('imageContainer');
-    const excelContainer = document.getElementById('excelContainer');
 
-    // 状态控制
     let syncing = false;
     let eventsBound = false;
 
@@ -208,8 +257,7 @@
       });
     };
 
-    // 绑定事件（只绑定一次）
-    function bindEvents(textRef, imageRef, excelRef) {
+    function bindEvents(textRef, imageRef, fileRef) {
       if (eventsBound) return;
       eventsBound = true;
 
@@ -234,57 +282,54 @@
         }
       });
 
-      // Excel 文件上传
-      excelInput.addEventListener('change', (event) => {
+      // 文件上传 (支持任意文件)
+      fileInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = e => {
-          excelRef.set(e.target.result);
-          excelInput.value = ''; // 重置，方便同文件重复上传
+          // 存储格式：{ name: 文件名, data: base64 }
+          fileRef.set({
+            name: file.name,
+            data: e.target.result
+          });
+          fileInput.value = ''; // 重置，方便同文件重复上传
         };
         reader.readAsDataURL(file);
       });
 
-      // 下载 Excel 文件
-      downloadExcelBtn.addEventListener('click', () => {
-        excelRef.get().then(snapshot => {
-          const base64 = snapshot.val();
-          if (!base64) return alert("没有上传的 Excel 文件");
+      // 下载文件按钮
+      downloadFileBtn.addEventListener('click', () => {
+        fileRef.get().then(snapshot => {
+          const val = snapshot.val();
+          if (!val || !val.data) return alert("没有上传的文件");
           const a = document.createElement("a");
-          a.href = base64;
-          a.download = "共享Excel.xlsx";
+          a.href = val.data;
+          a.download = val.name || "下载文件";
           document.body.appendChild(a);
           a.click();
           a.remove();
         });
       });
 
-      // 删除图片
-      deleteImageBtn.addEventListener('click', () => {
-        if (!confirm("确定删除图片？")) return;
-        imageRef.remove();
-      });
-
-      // 删除 Excel 文件
-      deleteExcelBtn.addEventListener('click', () => {
-        if (!confirm("确定删除 Excel 文件？")) return;
-        excelRef.remove();
+      // 删除文件按钮
+      deleteFileBtn.addEventListener('click', () => {
+        if (!confirm("确定删除文件？")) return;
+        fileRef.remove();
       });
     }
 
-    // 开始同步
     function startSync() {
       if (syncing) return;
       syncing = true;
 
-      // 显示同步区，隐藏验证码输入
       textarea.style.display = 'block';
-      imageElem.style.display = 'none'; // 默认隐藏，待数据库有图时显示
-      deleteImageBtn.style.display = 'none';
-      excelInput.style.display = 'block';
-      downloadExcelBtn.style.display = 'inline-block';
-      deleteExcelBtn.style.display = 'none';
+      imageElem.style.display = 'none';
+      imageButtons.style.display = 'none';
+
+      fileInput.style.display = 'block';
+      fileDisplay.style.display = 'none';
+
       codeInput.style.display = 'none';
       checkBtn.style.display = 'none';
       connectionButtons.style.display = 'flex';
@@ -293,7 +338,7 @@
 
       const textRef = database.ref("shared_text");
       const imageRef = database.ref("shared_image");
-      const excelRef = database.ref("shared_excel");
+      const fileRef = database.ref("shared_file");
 
       // 监听文字
       textRef.on("value", snapshot => {
@@ -307,31 +352,51 @@
         if (base64img) {
           imageElem.src = base64img;
           imageElem.style.display = "block";
-          deleteImageBtn.style.display = "inline-block";
+          imageButtons.style.display = "flex";
         } else {
           imageElem.style.display = "none";
           imageElem.src = "";
-          deleteImageBtn.style.display = "none";
+          imageButtons.style.display = "none";
         }
       });
 
-      // 监听 Excel 文件
-      excelRef.on("value", snapshot => {
+      // 监听文件
+      fileRef.on("value", snapshot => {
         const val = snapshot.val();
-        deleteExcelBtn.style.display = val ? 'inline-block' : 'none';
+        if (val && val.data && val.name) {
+          fileNameElem.textContent = val.name;
+          fileDisplay.style.display = 'flex';
+        } else {
+          fileNameElem.textContent = '';
+          fileDisplay.style.display = 'none';
+        }
       });
 
-      // 绑定事件
-      bindEvents(textRef, imageRef, excelRef);
+      bindEvents(textRef, imageRef, fileRef);
+
+      // 绑定图片按钮事件
+      downloadImageBtn.onclick = () => {
+        if (!imageElem.src) return alert("当前没有图片可下载");
+        const a = document.createElement("a");
+        a.href = imageElem.src;
+        let extension = imageElem.src.substring("data:image/".length, imageElem.src.indexOf(";base64"));
+        a.download = `下载图片.${extension}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      };
+
+      deleteImageBtn.onclick = () => {
+        if (!confirm("确定删除图片？")) return;
+        database.ref("shared_image").remove();
+      };
     }
 
-    // 断开连接按钮
     btnOffline.onclick = () => {
       firebase.database().goOffline();
       alert("已断开连接");
     };
 
-    // 重新连接按钮
     btnOnline.onclick = () => {
       firebase.database().goOnline();
       alert("已重新连接");
