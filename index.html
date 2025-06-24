@@ -327,9 +327,25 @@
         if (val && val.data && val.name) {
           fileNameElem.textContent = val.name;
           fileContainer.style.display = 'flex';
+      
+          // 显示下载和删除按钮
+          downloadFileBtn.style.display = 'inline-block';
+          deleteFileBtn.style.display = 'inline-block';
+      
+          // 显示上传按钮隐藏，避免重复上传
+          uploadFileLabel.style.display = 'none';
+          fileInput.style.display = 'none';
         } else {
           fileNameElem.textContent = '';
           fileContainer.style.display = 'none';
+      
+          // 隐藏下载和删除按钮
+          downloadFileBtn.style.display = 'none';
+          deleteFileBtn.style.display = 'none';
+      
+          // 显示上传按钮
+          uploadFileLabel.style.display = 'block';
+          fileInput.style.display = 'none';
         }
       });
 
