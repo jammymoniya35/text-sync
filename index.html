@@ -490,6 +490,7 @@
         }
         
         showMessage("正在验证...", false);
+        checkBtn.disabled = true;
         
         database.ref('valid_codes/' + code).get()
           .then(snapshot => {
@@ -506,6 +507,10 @@
             showMessage("验证出错: " + error.message);
             database.goOffline();
             updateConnectionStatus(false);
+            syncing = false; 
+          });
+          .finally(() => {
+            checkBtn.disabled = false;  // ✅ 恢复按钮
           });
       });
       
@@ -558,6 +563,7 @@
             updateConnectionStatus(false);
             hideSyncPanels();
             showMessage("连接已断开（可能是网络中断）", true);
+            syncing = false
           }
         });
       }
@@ -827,6 +833,7 @@
         showMessage("已断开连接", false);
         updateConnectionStatus(false);
         hideSyncPanels(); // 手动断开时隐藏同步模块
+        syncing = false
       });
 
       // 重新连接按钮
