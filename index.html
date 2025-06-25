@@ -212,12 +212,7 @@
     #downloadImageBtn {
       right: 65px;
     }
-    
-    .file-section {
-      width: 100%;
-      margin-top: 20px;
-    }
-    
+
     #fileContainer {
       margin-top: 15px;
       width: 100%;
@@ -513,6 +508,24 @@
             updateConnectionStatus(false);
           });
       });
+      
+      // 同步取消
+      function hideSyncPanels() {
+        textCard.style.display = 'none';
+        mediaCard.style.display = 'none';
+        fileSection.style.display = 'none';
+        connectionCard.style.display = 'none';
+      
+        // 清空内容（可选）
+        textarea.value = '';
+        imageElem.src = '';
+        imageElem.style.display = 'none';
+        deleteImageBtn.style.display = 'none';
+        downloadImageBtn.style.display = 'none';
+        fileContainer.style.display = 'none';
+        fileNameElem.textContent = '';
+        uploadFileLabel.style.display = 'block';
+      }
 
       // 开始同步
       function startSync() {
@@ -522,8 +535,8 @@
         // 显示同步区域
         textCard.style.display = 'block';
         mediaCard.style.display = 'block';
+        fileSection.style.display = 'block';
         connectionCard.style.display = 'block';
-        
         // 初始化Firebase引用
         textRef = database.ref("shared_text");
         imageRef = database.ref("shared_image");
@@ -537,8 +550,16 @@
         // 绑定事件
         bindEvents();
         
-        // 更新状态
-        updateConnectionStatus(true);
+        // ✅ 监听自动断开连接状态
+        firebase.database().ref(".info/connected").on("value", function(snapshot) {
+          if (snapshot.val() === true) {
+            updateConnectionStatus(true);
+          } else {
+            updateConnectionStatus(false);
+            hideSyncPanels();
+            showMessage("连接已断开（可能是网络中断）", true);
+          }
+        });
       }
 
       // 设置文字监听
@@ -805,6 +826,7 @@
         database.goOffline();
         showMessage("已断开连接", false);
         updateConnectionStatus(false);
+        hideSyncPanels(); // 手动断开时隐藏同步模块
       });
 
       // 重新连接按钮
@@ -812,6 +834,7 @@
         database.goOnline();
         showMessage("已重新连接", false);
         updateConnectionStatus(true);
+        startSync(); // 重新连接恢复同步页面
       });
       
       // 初始状态
