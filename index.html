@@ -561,9 +561,10 @@
         fileSection.style.display = 'block';
         connectionCard.style.display = 'block';
         // 初始化Firebase引用
-        textRef = database.ref("shared_text");
-        imageRef = database.ref("shared_image");
-        fileRef = database.ref("shared_file");
+        textRef = database.ref("channels/" + code + "/text");
+        imageRef = database.ref("channels/" + code + "/image");
+        fileRef = database.ref("channels/" + code + "/file");
+
 
         // 设置监听器
         setupTextListener();
