@@ -624,7 +624,7 @@
             }
           },
           error => {
-            showTypeMessage("同步图片出错: " + error.message, image);
+            showTypeMessage("同步图片出错: " + error.message, "image");
           }
         );
       }
@@ -650,7 +650,7 @@
             }
           },
           error => {
-            showTypeMessage("同步文件出错: " + error.message, file);
+            showTypeMessage("同步文件出错: " + error.message, "file");
           }
         );
       }
@@ -662,7 +662,7 @@
         
         // 文件大小检查 (8MB限制)
         if (file.size > 8 * 1024 * 1024) {
-          showTypeMessage("文件大小不能超过8MB", file);
+          showTypeMessage("文件大小不能超过8MB", "file");
           resetFileInput();
           return;
         }
@@ -684,9 +684,9 @@
             data: dataUrl
           });
           
-          showTypeMessage("文件上传成功", file, false);
+          showTypeMessage("文件上传成功", "file", false);
         } catch (error) {
-          showTypeMessage("上传文件出错: " + error.message, file);
+          showTypeMessage("上传文件出错: " + error.message, "file");
         } finally {
           // 恢复上传按钮状态
           uploadFileLabel.textContent = '点击上传或拖放文件到此处';
@@ -737,10 +737,10 @@
               reader.onload = (evt) => {
                 imageRef.set(evt.target.result)
                   .then(() => {
-                    showTypeMessage("图片已上传", image, false);
+                    showTypeMessage("图片已上传", "image", false);
                   })
                   .catch(error => {
-                    showTypeMessage("上传图片出错: " + error.message, image);
+                    showTypeMessage("上传图片出错: " + error.message, "image");
                   });
               };
               reader.readAsDataURL(file);
@@ -785,10 +785,10 @@
           if (!confirm("确定删除图片？该操作会同步到所有设备")) return;
           imageRef.remove()
             .then(() => {
-              showTypeMessage("图片已删除", image, false);
+              showTypeMessage("图片已删除", "image", false);
             })
             .catch(error => {
-              showTypeMessage("删除图片出错: " + error.message, image);
+              showTypeMessage("删除图片出错: " + error.message, "image");
             });
         });
 
@@ -800,10 +800,10 @@
           if (!confirm("确定删除文件？该操作会同步到所有设备")) return;
           fileRef.remove()
             .then(() => {
-              showTypeMessage("文件删除成功", file, false);
+              showTypeMessage("文件删除成功", "file", false);
             })
             .catch(error => {
-              showTypeMessage("删除文件出错: " + error.message, file);
+              showTypeMessage("删除文件出错: " + error.message, "file");
             });
         });
       }
@@ -811,7 +811,7 @@
       // 下载图片函数
       function downloadImage() {
         if (!imageElem.src) {
-          showTypeMessage("当前没有图片可下载", image);
+          showTypeMessage("当前没有图片可下载", "image");
           return;
         }
         
@@ -832,7 +832,7 @@
           .then(snapshot => {
             const val = snapshot.val();
             if (!val || !val.data) {
-              showTypeMessage("没有可下载的文件", file);
+              showTypeMessage("没有可下载的文件", "file");
               return;
             }
             
@@ -844,7 +844,7 @@
             a.remove();
           })
           .catch(error => {
-            showTypeMessage("获取文件出错: " + error.message, file);
+            showTypeMessage("获取文件出错: " + error.message, "file");
           });
       }
 
