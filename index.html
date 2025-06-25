@@ -120,14 +120,6 @@
       background: #c0392b;
     }
     
-    #btnOnline {
-      background: #2ecc71;
-    }
-    
-    #btnOnline:hover {
-      background: #27ae60;
-    }
-    
     textarea {
       height: 200px;
       resize: vertical;
@@ -857,14 +849,6 @@
         updateConnectionStatus(false);
         hideSyncPanels(); // 手动断开时隐藏同步模块
         syncing = false
-      });
-
-      // 重新连接按钮
-      btnOnline.addEventListener('click', () => {
-        database.goOnline();
-        showMessage("已重新连接", false);
-        updateConnectionStatus(true);
-        startSync(); // 重新连接恢复同步页面
       });
       
       // 初始状态
