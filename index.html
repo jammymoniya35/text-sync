@@ -667,21 +667,28 @@
           uploadFileLabel.textContent = '上传中...';
           uploadFileLabel.classList.add('uploading');
           
-          const dataUrl = await new Promise((resolve, reject) => {
+         const dataUrl = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = e => resolve(e.target.result);
             reader.onerror = reject;
             reader.readAsDataURL(file);
           });
-          
-          await fileRef.set({
-            name: file.name,
-            data: dataUrl
-          });
-          
-          showTypeMessage("文件上传成功", "file", false);
+        
+          if (file.type.startsWith("image/")) {
+            // 是图片文件 → 上传到图片区域
+            await imageRef.set(dataUrl);
+            showTypeMessage("图片上传成功", "image", false);
+          } else {
+            // 是其他文件 → 上传到文件区域
+            await fileRef.set({
+              name: file.name,
+              data: dataUrl
+            });
+            showTypeMessage("文件上传成功", "file", false);
+          }
         } catch (error) {
-          showTypeMessage("上传文件出错: " + error.message, "file");
+          const type = file?.type?.startsWith("image/") ? "image" : "file";
+          showTypeMessage("上传出错: " + error.message, type);
         } finally {
           // 恢复上传按钮状态
           uploadFileLabel.textContent = '点击上传或拖放文件到此处';
