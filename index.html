@@ -403,7 +403,6 @@
     <h2 class="section-title">连接管理</h2>
     <div id="connectionButtons">
       <button id="btnOffline">断开连接</button>
-      <button id="btnOnline">重新连接</button>
     </div>
   </div>
 
@@ -515,6 +514,9 @@
         
         showMessage("正在验证...", false);
         checkBtn.disabled = true;
+        
+        // 先建立连接
+        firebase.database().goOnline();
         
         database.ref('valid_codes/' + code).get()
           .then(snapshot => {
