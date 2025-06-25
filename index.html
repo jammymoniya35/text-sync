@@ -508,7 +508,7 @@
             database.goOffline();
             updateConnectionStatus(false);
             syncing = false; 
-          });
+          })
           .finally(() => {
             checkBtn.disabled = false;  // ✅ 恢复按钮
           });
