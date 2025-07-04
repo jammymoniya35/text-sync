@@ -828,14 +828,6 @@
         a.remove();
       }
 
-      function base64ToBlob(base64, mime) {
-        const byteChars = atob(base64.split(',')[1]);
-        const byteArrays = [];
-        for (let i = 0; i < byteChars.length; i++) {
-          byteArrays.push(byteChars.charCodeAt(i));
-        }
-        return new Blob([new Uint8Array(byteArrays)], { type: mime });
-      }
       // 下载文件函数
       function downloadFile() {
         fileRef.get()
@@ -845,29 +837,18 @@
               showTypeMessage("没有可下载的文件", "file");
               return;
             }
-      
-            // 获取文件类型
-            const mimeMatch = val.data.match(/^data:(.*?);base64,/);
-            const mime = mimeMatch ? mimeMatch[1] : "application/octet-stream";
-      
-            // 转 Blob
-            const blob = base64ToBlob(val.data, mime);
-      
-            // 生成临时链接
-            const url = URL.createObjectURL(blob);
+            
             const a = document.createElement("a");
-            a.href = url;
+            a.href = val.data;
             a.download = val.name || "下载文件";
             document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url); // 释放内存
+            a.remove();
           })
           .catch(error => {
             showTypeMessage("获取文件出错: " + error.message, "file");
           });
       }
-
 
       // 断开连接按钮
       btnOffline.addEventListener('click', () => {
