@@ -343,14 +343,14 @@
     <div class="instructions">
       <h3>使用说明：</h3>
       <ul>
-        <li>输入验证码连接同步服务</li>
+        <li>输入口令连接同步服务</li>
         <li>文本内容会自动同步到所有设备</li>
         <li>粘贴图片或上传文件实现跨设备共享</li>
         <li>所有数据加密传输，保障安全</li>
       </ul>
     </div>
     
-    <input type="text" id="codeInput" placeholder="请输入验证码" autocomplete="off" />
+    <input type="text" id="codeInput" placeholder="请输入口令" autocomplete="off" />
     <button id="checkBtn">验证并连接</button>
     
     <div id="msg"></div>
@@ -399,7 +399,7 @@
   </div>
 
   <footer>
-    <p>安全同步工具 &copy; 2023 | 所有数据均加密传输</p>
+    <p>安全同步工具 &copy; 2025 | 所有数据均加密传输</p>
   </footer>
 
   <!-- Firebase SDK -->
@@ -500,7 +500,7 @@
       checkBtn.addEventListener('click', () => {
         const code = codeInput.value.trim();
         if (!code) {
-          showMessage("请输入验证码");
+          showMessage("请输入口令");
           return;
         }
         
@@ -516,7 +516,7 @@
               showMessage("验证成功，开始同步", false);
               startSync(code);
             } else {
-              showMessage("验证码无效");
+              showMessage("口令无效");
               database.goOffline();
               updateConnectionStatus(false);
             }
@@ -865,3 +865,4 @@
   </script>
 </body>
 </html>
+
